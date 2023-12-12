@@ -98,7 +98,10 @@ startothers(void)
 // Page directories (and page tables) must start on page boundaries,
 // hence the __aligned__ attribute.
 // PTE_PS in a page directory entry enables 4Mbyte pages.
-
+// 32位线性地址结构：
+//  PS位为0，4KB分页, 0-11 is offset(12bit), 12-21 is table(10bit), 22-31 is directory(10bit)
+//  PS位为1，4MB分页，0-21 is offset(22bit), 22-31 is directory(10bit)
+// 页表项结构：0-11 访问权限和状态位占用12位，12-31 物理地址占用20位
 __attribute__((__aligned__(PGSIZE)))
 pde_t entrypgdir[NPDENTRIES] = {
   // Map VA's [0, 4MB) to PA's [0, 4MB)

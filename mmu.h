@@ -91,10 +91,10 @@ struct segdesc {
 #define PGROUNDDOWN(a) (((a)) & ~(PGSIZE-1))
 
 // Page table/directory entry flags.
-#define PTE_P           0x001   // Present
-#define PTE_W           0x002   // Writeable
-#define PTE_U           0x004   // User
-#define PTE_PS          0x080   // Page Size
+#define PTE_P           0x001   // Present 存在标志位，用于指示该页面是否在物理内存中。
+#define PTE_W           0x002   // 写标志位，用于指示该页面是否可写入。
+#define PTE_U           0x004   // User 用户模式标志位，用于指示该页面是否可以被用户模式访问 0 表示该物理内存页面只有内核才可以访问，值为 1 表示用户空间的进程也可以访问
+#define PTE_PS          0x080   // Page Size 0表示为normal size的page（即4KB），为1表示large page，即4MB
 
 // Address in page table or page directory entry
 #define PTE_ADDR(pte)   ((uint)(pte) & ~0xFFF)

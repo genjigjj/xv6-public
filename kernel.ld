@@ -11,6 +11,8 @@ SECTIONS
         /* Must be equal to KERNLINK */
 	. = 0x80100000;
 
+   /* AT(...) gives the load address of this section, which tells
+	   the boot loader where to load the kernel in physical memory */
 	.text : AT(0x100000) {
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 	}
@@ -50,12 +52,18 @@ SECTIONS
 		*(.data)
 	}
 
+    /**
+      定义一个名为 edata 的符号，并将其值设置为当前位置计数器（.）的值。确定数据段的结束地址
+     */
 	PROVIDE(edata = .);
 
 	.bss : {
 		*(.bss)
 	}
 
+    /**
+      定义一个名为 end 的符号，并将其值设置为当前位置计数器（.）的值。用于确定内存区域的结束位置，标识内核整个数据段和bss段的结束地址
+     */
 	PROVIDE(end = .);
 
 	/DISCARD/ : {
