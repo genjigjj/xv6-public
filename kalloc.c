@@ -59,12 +59,17 @@ freerange(void *vstart, void *vend)
 void
 kfree(char *v)
 {
+  // 定义了一个指向 struct run 结构体的指针变量 r，用于操作内存空闲列表。
   struct run *r;
-
+  // 对传入的指针 v 进行合法性检查
+  //  v 是页面大小（PGSIZE）的整数倍。
+  //  v 大于等于 end，即不低于内核结束位置。
+  //  v 转换为物理地址后小于 PHYSTOP，即不超过物理内存的末尾。
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
+    // 内核恐慌（panic）是指操作系统内核在遇到无法处理的错误或异常情况时，为了避免进一步的系统崩溃或数据丢失而直接停止运行并输出错误信息的一种机制。
     panic("kfree");
 
-  // Fill with junk to catch dangling refs.
+  // Fill with junk to catch dangling refs. 使用 memset 函数将释放的内存块填充为指定的值（1），目的是为了捕获悬空引用（dangling references）
   memset(v, 1, PGSIZE);
 
   if(kmem.use_lock)

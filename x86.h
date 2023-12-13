@@ -39,6 +39,13 @@ outsl(int port, const void *addr, int cnt)
                "cc");
 }
 
+/**
+ * cld、rep 和 stosb 是 x86 汇编语言中的指令。
+ * cld 是 "Clear Direction Flag" 的缩写，用于清除方向标志位（DF），将其设置为正向（向前）方向。方向标志位影响一些操作指令的行为，如串操作指令中的自动递增或递减。
+ * 通过使用 cld 指令，可以确保后续字符串操作指令按照从低地址到高地址的方向进行操作。
+ * rep 是 "Repeat String Operation" 的缩写，用于指示接下来的字符串操作指令重复执行。它通常与 stosb、movsb、lodsb 等字符串操作指令一起使用。
+ * stosb 是 "Store Byte" 的缩写，用于将一个字节的数据存储到目标地址中。stosb 指令通常与 rep 前缀一起使用，配合计数寄存器 ECX 中指定的重复次数，将指定的数据重复存储到连续的内存地址中。
+ */
 static inline void
 stosb(void *addr, int data, int cnt)
 {
@@ -48,6 +55,8 @@ stosb(void *addr, int data, int cnt)
                "memory", "cc");
 }
 
+// stosl 是 "Store Doubleword" 的缩写，用于将双字（4 字节）的数据存储到目标地址中。
+// stosl 指令将 EAX 寄存器中的内容存储到以 EDI 寄存器指向的内存地址中，并根据方向标志位的设置自动递增或递减 EDI 寄存器的值。
 static inline void
 stosl(void *addr, int data, int cnt)
 {
