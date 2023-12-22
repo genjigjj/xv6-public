@@ -1,3 +1,11 @@
+// Local APIC ID（Local Advanced Programmable Interrupt Controller Identifier）是指每个处理器核心（CPU）上的本地APIC（Advanced Programmable Interrupt Controller）
+// 的唯一标识符。在多核处理器系统中，每个处理器核心都有一个独有的Local APIC ID。
+//Local APIC是一种高级可编程中断控制器，用于处理和分发处理器内部和外部中断。它可以通过一个32位寄存器（Local APIC ID Register）来获取其ID值，该ID值通常由BIOS或操作系统在引导时设置。
+// 这个ID值在整个系统中必须是唯一的，并且必须与其他处理器核心的ID值不同。
+//使用Local APIC ID可以实现更精细的中断控制和调度，例如将特定的中断信号分配给特定的处理器核心处理，避免中断之间的竞争、提高系统性能等。
+// 此外，在NUMA（Non-Uniform Memory Access）系统中，Local APIC ID还用于帮助定位物理内存位置，以实现更高效的内存访问。
+//总之，Local APIC ID是处理器核心上本地APIC的唯一标识符，可用于实现更精细的中断控制和调度，以及提高系统性能。
+
 // Per-CPU state
 struct cpu {
   uchar apicid;                // Local APIC ID

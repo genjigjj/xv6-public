@@ -119,7 +119,7 @@ cli(void)
 {
   asm volatile("cli");
 }
-
+// sti 是 x86 架构中的一条指令，用于开启处理器的中断响应。它会将中断标志位置为 1，允许处理器响应外部中断信号
 static inline void
 sti(void)
 {

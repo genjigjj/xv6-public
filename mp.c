@@ -51,16 +51,19 @@ mpsearch(void)
   uchar *bda;
   uint p;
   struct mp *mp;
-
+  // BIOS Data Area地址
   bda = (uchar *) P2V(0x400);
+  //在EBDA中最开始1K中寻找
   if((p = ((bda[0x0F]<<8)| bda[0x0E]) << 4)){
     if((mp = mpsearch1(p, 1024)))
       return mp;
   } else {
+    //在基本内存的最后1K中查找
     p = ((bda[0x14]<<8)|bda[0x13])*1024;
     if((mp = mpsearch1(p-1024, 1024)))
       return mp;
   }
+  // 在0xf0000~0xfffff中查找
   return mpsearch1(0xF0000, 0x10000);
 }
 
@@ -101,6 +104,8 @@ mpinit(void)
   if((conf = mpconfig(&mp)) == 0)
     panic("Expect to run on an SMP");
   ismp = 1;
+  //APIC默认的物理地址为从0xFEE00000起的4KB页，每个CPU使用的物理地址都是一样的，但它们对应的是各自的Local APIC。
+  //每个CPU都用同样的物理地址访问自己的 LAPIC。这说明除了 x86 平台的port I/O 具有 64K 独立的物理地址空间外，LAPIC 也拥有独立的物理地址。我能想到的理由是防止 CPU 访问不属于自己的 LAPIC。
   lapic = (uint*)conf->lapicaddr;
   for(p=(uchar*)(conf+1), e=(uchar*)conf+conf->length; p<e; ){
     switch(*p){
@@ -130,9 +135,13 @@ mpinit(void)
   if(!ismp)
     panic("Didn't find a suitable machine");
 
+  // IMCR（Interrupt Mode Configuration Register）是x86架构中的一个寄存器，它用于配置外部中断的处理方式。
+  // 在x86架构中，有两种处理外部中断的模式：PIC（Programmable Interrupt Controller）模式和APIC（Advanced Programmable Interrupt Controller）模式。
+  // IMCR寄存器允许操作系统或程序选择使用哪种模式来处理外部中断。
   if(mp->imcrp){
     // Bochs doesn't support IMCR, so this doesn't run on Bochs.
     // But it would on real hardware.
+    // 选择IMCR寄存器，然后将外部中断屏蔽使能，屏蔽掉外部中断信号的触发
     outb(0x22, 0x70);   // Select IMCR
     outb(0x23, inb(0x23) | 1);  // Mask external interrupts.
   }

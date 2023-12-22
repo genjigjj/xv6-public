@@ -153,6 +153,10 @@ lapicstartap(uchar apicid, uint addr)
   // when it is in the halted state due to an INIT.  So the second
   // should be ignored, but it is part of the official Intel algorithm.
   // Bochs complains about the second one.  Too bad for Bochs.
+  // 右移12位的操作是为了将地址addr转换为以页为单位的地址
+  // Bits 0-7 The vector number, or starting page number for SIPIs 表示启动处理器时的起始页号
+  // Bits 8-10 The destination mode. 0 is normal, 1 is lowest priority, 2 is SMI, 4 is NMI, 5 can be INIT or INIT level de-assert, 6 is a SIPI.
+  // SIPI（Startup Inter-Processor Interrupt）是一种特殊类型的中断请求，用于在多处理器系统中启动一个或多个处理器
   for(i = 0; i < 2; i++){
     lapicw(ICRHI, apicid<<24);
     lapicw(ICRLO, STARTUP | (addr>>12));
