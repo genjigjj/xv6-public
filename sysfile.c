@@ -283,7 +283,7 @@ create(char *path, short type, short major, short minor)
 }
 
 int
-sys_open(void)
+ sys_open(void)
 {
   char *path;
   int fd, omode;

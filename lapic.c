@@ -64,6 +64,10 @@ lapicinit(void)
   // from lapic[TICR] and then issues an interrupt.
   // If xv6 cared more about precise timekeeping,
   // TICR would be calibrated using an external time source.
+  // 对于周期模式，软件设置“初始计数”，本地 APIC 将其用作“当前计数”。本地 APIC 递减当前计数，直至达到零，然后生成定时器 IRQ，并将当前计数重置为初始计数，并再次开始递减当前计数。
+  // 通过这种方式，本地 APIC 根据初始计数以固定速率生成 IRQ。当前计数的递减速率取决于 CPU 的外部频率（“总线频率”）除以本地 APIC 的“除法配置寄存器”中的值
+  // 例如，对于外部/总线频率为800 MHz的2.4 GHz CPU，如果除法配置寄存器设置为“除以4”并且初始计数设置为123456；那么本地 APIC 定时器将以 200 MHz 的速率递减计数，
+  // 并每 617.28 us 生成一个定时器 IRQ，从而给出 1620.01 Hz 的 IRQ 速率。
   lapicw(TDCR, X1);
   lapicw(TIMER, PERIODIC | (T_IRQ0 + IRQ_TIMER));
   lapicw(TICR, 10000000);

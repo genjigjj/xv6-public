@@ -161,7 +161,7 @@ struct trapframe {
   uint edi;
   uint esi;
   uint ebp;
-  uint oesp;      // useless & ignored
+  uint oesp;      // useless & ignored  The value pushed for the ESP register is its value before prior to pushing the first register
   uint ebx;
   uint edx;
   uint ecx;

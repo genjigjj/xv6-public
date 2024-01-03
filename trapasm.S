@@ -21,6 +21,8 @@ alltraps:
   addl $4, %esp
 
   # Return falls through to trapret...
+  # popal 恢复通用寄存器，popl 恢复 %gs，%fs，%es，%ds
+  # iret 弹出 %cs，%eip，%flags，%esp，%ss
 .globl trapret
 trapret:
   popal
