@@ -21,6 +21,10 @@ seginit(void)
   // Cannot share a CODE descriptor for both kernel and user
   // because it would have to have DPL_USR, but the CPU forbids
   // an interrupt from CPL=0 to DPL=3.
+  // 这段注释提到了不能共享一个 CODE 描述符给内核和用户，因为这需要具有 DPL_USR（用户特权级别），但是 CPU 不允许从 CPL=0（内核特权级别）的中断跳转到 DPL=3（用户特权级别）。
+  // 也就是说，中断处理过程中，如果从内核态切换到用户态，必须确保目标代码段的特权级别不高于当前特权级别，否则会引发异常。
+  // 所以，为了满足 CPU 的要求和限制，内核和用户必须分别有自己的 CODE 描述符，并且它们的特权级别需要分别符合要求。
+  // 这样，在进行特权级别切换时，可以正确地进行权限检查，避免异常的发生。
   c = &cpus[cpuid()];
   c->gdt[SEG_KCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, 0);
   c->gdt[SEG_KDATA] = SEG(STA_W, 0, 0xffffffff, 0);

@@ -73,5 +73,5 @@ entry:
   # for a direct jump.
   mov $main, %eax
   jmp *%eax
-
+  # 声明未初始化的数据通用内存区域，处于.bss段。地址为 0x8010a5c0
 .comm stack, KSTACKSIZE

@@ -21,7 +21,7 @@ swtch:
   movl %esp, (%eax)
   movl %edx, %esp
 
-  # Load new callee-saved registers
+  # Load new callee-saved registers, ret会跳转到forkret
   popl %edi
   popl %esi
   popl %ebx

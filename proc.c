@@ -392,7 +392,7 @@ yield(void)
 }
 
 // A fork child's very first scheduling by scheduler()
-// will swtch here.  "Return" to user space.
+// will swtch here.  "Return" to user space. forkret调用完后会使用ret指令，刚好跳转到trapret
 void
 forkret(void)
 {
