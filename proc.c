@@ -198,7 +198,7 @@ fork(void)
   }
   np->sz = curproc->sz;
   np->parent = curproc;
-  *np->tf = *curproc->tf;
+  *np->tf = *curproc->tf; // 此处是深拷贝，curproc进程的trapframe会全部拷贝到np进程的trapframe
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;

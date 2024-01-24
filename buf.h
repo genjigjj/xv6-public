@@ -1,6 +1,6 @@
 struct buf {
-  int flags;
-  uint dev;
+  int flags; //表示该块是否脏是否有效
+  uint dev; // 设备号，0-主盘，1-从盘
   uint blockno;
   struct sleeplock lock;
   uint refcnt;

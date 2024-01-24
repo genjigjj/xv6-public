@@ -65,13 +65,15 @@ exec(char *path, char **argv)
   sz = PGROUNDUP(sz);
   if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
     goto bad;
-  clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
+  clearpteu(pgdir, (char*)(sz - 2*PGSIZE)); // 第一个页帧隔离用户代码和用户栈
   sp = sz;
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
       goto bad;
+    // & ~3 的作用是将 sp 的值向下取整，使其对齐到4字节的边界。
+    // 这是因为在32位的x86架构中，栈指针需要按照4字节对齐，以确保内存访问的效率和正确性。
     sp = (sp - (strlen(argv[argc]) + 1)) & ~3;
     if(copyout(pgdir, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
       goto bad;

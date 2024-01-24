@@ -79,23 +79,25 @@ idestart(struct buf *b)
     panic("incorrect blockno");
   int sector_per_block =  BSIZE/SECTOR_SIZE;
   int sector = b->blockno * sector_per_block;
-  int read_cmd = (sector_per_block == 1) ? IDE_CMD_READ :  IDE_CMD_RDMUL;
-  int write_cmd = (sector_per_block == 1) ? IDE_CMD_WRITE : IDE_CMD_WRMUL;
+  int read_cmd = (sector_per_block == 1) ? IDE_CMD_READ :  IDE_CMD_RDMUL; //一个块包含多个扇区的话就用读多个块的命令
+  int write_cmd = (sector_per_block == 1) ? IDE_CMD_WRITE : IDE_CMD_WRMUL; //一个块包含多个扇区的话就用写多个块的命令
 
   if (sector_per_block > 7) panic("idestart");
 
-  idewait(0);
-  outb(0x3f6, 0);  // generate interrupt
-  outb(0x1f2, sector_per_block);  // number of sectors
-  outb(0x1f3, sector & 0xff);
-  outb(0x1f4, (sector >> 8) & 0xff);
-  outb(0x1f5, (sector >> 16) & 0xff);
-  outb(0x1f6, 0xe0 | ((b->dev&1)<<4) | ((sector>>24)&0x0f));
-  if(b->flags & B_DIRTY){
-    outb(0x1f7, write_cmd);
-    outsl(0x1f0, b->data, BSIZE/4);
+  idewait(0); //等待磁盘就绪
+  outb(0x3f6, 0);  // generate interrupt 可以通知IDE控制器生成中断信号，以便操作系统能够检测到磁盘操作的完成
+  outb(0x1f2, sector_per_block);  // number of sectors 读取几个扇区
+  outb(0x1f3, sector & 0xff);  //LBA地址 低8位
+  outb(0x1f4, (sector >> 8) & 0xff); //LAB地址 中8位
+  outb(0x1f5, (sector >> 16) & 0xff); //LBA地址 高8位
+  outb(0x1f6, 0xe0 | ((b->dev&1)<<4) | ((sector>>24)&0x0f)); //LBA地址最高的4位，(b->dev&1)<<4来选择读写主盘还是从盘
+  // 读操作要磁盘准备好数据触发中断后才能从数据寄存器读到缓存块，而写操作直接通过数据寄存器写到磁盘的缓冲区就行了，
+  // 剩下实际物理上的写操作磁盘自己完成，完成之后触发中断 CPU 再去收尾
+  if(b->flags & B_DIRTY){  //表示数据脏了，需要写到磁盘去了
+    outb(0x1f7, write_cmd); //向0x1f7发送写命令
+    outsl(0x1f0, b->data, BSIZE/4); //向磁盘写数据
   } else {
-    outb(0x1f7, read_cmd);
+    outb(0x1f7, read_cmd); //否则发送读命令，但还没有读
   }
 }
 
@@ -124,7 +126,7 @@ ideintr(void)
   wakeup(b);
 
   // Start disk on next buf in queue.
-  if(idequeue != 0)
+  if(idequeue != 0)  // 此时队列还不空，则处理下一个
     idestart(idequeue);
 
   release(&idelock);
