@@ -31,6 +31,7 @@
 
 // Contents of the header block, used for both the on-disk header block
 // and to keep track in memory of logged block# before commit.
+// 记录的是被修改的块的数量，以及它们的扇区号
 struct logheader {
   int n;
   int block[LOGSIZE];
@@ -65,7 +66,10 @@ initlog(int dev)
   recover_from_log();
 }
 
-// Copy committed blocks from log to their home location
+// Copy committed blocks from log to their home location 将磁盘中被修改的块从块缓存真正写回磁盘
+// 负责使用日志覆盖掉对应的盘块。该方法读取logheader.blocks数组，将每个对应的日志区的盘块安装到文件区。
+// 当成功用日志覆盖掉对应的盘块后，系统已经无需再继续持有这些日志，
+// 因此会再次调用write_head修改日志区的logheader来清除日志，并设定log[dev].lh.n = 0。
 static void
 install_trans(void)
 {
@@ -98,6 +102,7 @@ read_head(void)
 // Write in-memory log header to disk.
 // This is the true point at which the
 // current transaction commits.
+// 修改磁盘日志区的元数据区
 static void
 write_head(void)
 {
@@ -174,6 +179,8 @@ end_op(void)
 }
 
 // Copy modified blocks from cache to log.
+// 负责将日志写入到磁盘的日志区，
+// 缓冲块指针to对应着日志区上放置这条日志的盘块，from对应着一条处于提交状态的日志。
 static void
 write_log(void)
 {

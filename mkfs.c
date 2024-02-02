@@ -104,7 +104,7 @@ main(int argc, char *argv[])
 
   printf("nmeta %d (boot, super, log blocks %u inode blocks %u, bitmap blocks %u) blocks %d total %d\n",
          nmeta, nlog, ninodeblocks, nbitmap, nblocks, FSSIZE);
-
+  // nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
   freeblock = nmeta;     // the first free block that we can allocate
 
   for(i = 0; i < FSSIZE; i++)
@@ -252,18 +252,19 @@ balloc(int used)
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+// 文件的 inode 编号 inum、待写入数据的指针 xp 和数据长度 n
 void
 iappend(uint inum, void *xp, int n)
 {
   char *p = (char*)xp;
-  uint fbn, off, n1;
+  uint fbn, off, n1; // 文件块编号、偏移量和写入字节数
   struct dinode din;
-  char buf[BSIZE];
-  uint indirect[NINDIRECT];
-  uint x;
+  char buf[BSIZE]; // 用于缓存从磁盘读取的数据块
+  uint indirect[NINDIRECT]; // 存储一级间接块地址
+  uint x; // 用于存储分配的块地址
 
   rinode(inum, &din);
-  off = xint(din.size);
+  off = xint(din.size); // 表示当前已有的写入偏移量
   // printf("append inum %d at off %d sz %d\n", inum, off, n);
   while(n > 0){
     fbn = off / BSIZE;
@@ -284,7 +285,7 @@ iappend(uint inum, void *xp, int n)
       }
       x = xint(indirect[fbn-NDIRECT]);
     }
-    n1 = min(n, (fbn + 1) * BSIZE - off);
+    n1 = min(n, (fbn + 1) * BSIZE - off); //计算当前块可以写入的字节数，不能超过一个块的大小
     rsect(x, buf);
     bcopy(p, buf + off - (fbn * BSIZE), n1);
     wsect(x, buf);

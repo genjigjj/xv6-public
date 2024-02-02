@@ -126,7 +126,7 @@ panic(char *s)
 //PAGEBREAK: 50
 #define BACKSPACE 0x100
 #define CRTPORT 0x3d4
-static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
+static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory 0xB8000-0xBFFFF，用于文本模式
 
 static void
 cgaputc(int c)
@@ -181,9 +181,9 @@ consputc(int c)
 #define INPUT_BUF 128
 struct {
   char buf[INPUT_BUF];
-  uint r;  // Read index
-  uint w;  // Write index
-  uint e;  // Edit index
+  uint r;  // Read index 读取到了哪一个字符
+  uint w;  // Write index 它标志着 '\n' EOF 这种字符在哪个位置。
+  uint e;  // Edit index 最新到来的字符在哪个位置
 } input;
 
 #define C(x)  ((x)-'@')  // Control-x
@@ -218,6 +218,8 @@ consoleintr(int (*getc)(void))
         c = (c == '\r') ? '\n' : c;
         input.buf[input.e++ % INPUT_BUF] = c;
         consputc(c);
+        // 果这个字符是换行符或者 EOF 又或者缓存区满了，就使 input.w = input.e，
+        // 使得w来标识当前一段数据的末尾和下一段数据的开始
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
           input.w = input.e;
           wakeup(&input.r);

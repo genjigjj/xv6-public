@@ -83,7 +83,7 @@ bfree(int dev, uint b)
 {
   struct buf *bp;
   int bi, m;
-
+  // bmap盘块数据
   bp = bread(dev, BBLOCK(b, sb));
   bi = b % BPB;
   m = 1 << (bi % 8);
@@ -191,6 +191,9 @@ static struct inode* iget(uint dev, uint inum);
 // Allocate an inode on device dev.
 // Mark it as allocated by  giving it type type.
 // Returns an unlocked but allocated and referenced inode.
+// 从磁盘上申请一个空闲的dinode, 返回inode指针
+// 在磁盘的inode区进行查找，如果inode的type == 0， 表示未使用。
+// 通过调用iget()函数获取到空闲inode在内存中的映射。
 struct inode*
 ialloc(uint dev, short type)
 {
@@ -217,6 +220,9 @@ ialloc(uint dev, short type)
 // Must be called after every change to an ip->xxx field
 // that lives on disk, since i-node cache is write-through.
 // Caller must hold ip->lock.
+// 把内存中的inode信息写入到磁盘中
+// 读到inode在磁盘中的block块
+// 更新内容并写入磁盘。
 void
 iupdate(struct inode *ip)
 {
@@ -238,6 +244,7 @@ iupdate(struct inode *ip)
 // Find the inode with number inum on device dev
 // and return the in-memory copy. Does not lock
 // the inode and does not read it from disk.
+// 在内存的inode缓存区中查找未使用的inode块
 static struct inode*
 iget(uint dev, uint inum)
 {
@@ -273,6 +280,7 @@ iget(uint dev, uint inum)
 
 // Increment reference count for ip.
 // Returns ip to enable ip = idup(ip1) idiom.
+// inode节点，增加内存中的引用次数
 struct inode*
 idup(struct inode *ip)
 {
@@ -284,6 +292,7 @@ idup(struct inode *ip)
 
 // Lock the given inode.
 // Reads the inode from disk if necessary.
+// 把磁盘上的inode同步到内存中并加锁
 void
 ilock(struct inode *ip)
 {
@@ -369,6 +378,8 @@ iunlockput(struct inode *ip)
 
 // Return the disk block address of the nth block in inode ip.
 // If there is no such block, bmap allocates one.
+// 把inode对应的数据区的第m个block块映射到对应的磁盘的第n个block块。
+// 特别注意: 如果inode对应的数据的block块不存在时，会向磁盘申请一个block块。也就是说，它存在扩容的情况
 static uint
 bmap(struct inode *ip, uint bn)
 {
@@ -404,6 +415,7 @@ bmap(struct inode *ip, uint bn)
 // to it (no directory entries referring to it)
 // and has no in-memory reference to it (is
 // not an open file or current directory).
+// 释放不使用的inode， 如果inode不再被使用，要释放掉inode关联的数据块。
 static void
 itrunc(struct inode *ip)
 {
@@ -449,6 +461,7 @@ stati(struct inode *ip, struct stat *st)
 //PAGEBREAK!
 // Read data from inode.
 // Caller must hold ip->lock.
+// 读inode的数据区
 int
 readi(struct inode *ip, char *dst, uint off, uint n)
 {
@@ -478,6 +491,7 @@ readi(struct inode *ip, char *dst, uint off, uint n)
 // PAGEBREAK!
 // Write data to inode.
 // Caller must hold ip->lock.
+// 写inode的数据区
 int
 writei(struct inode *ip, char *src, uint off, uint n)
 {
@@ -521,6 +535,9 @@ namecmp(const char *s, const char *t)
 
 // Look for a directory entry in a directory.
 // If found, set *poff to byte offset of entry.
+// 在给定的目录的inode下， 查找指定的目录项。
+// 代码中认为, dirent.inum = 0 为空目录项，跳过。
+// 通过比较目录项的name 来判断是否相同。
 struct inode*
 dirlookup(struct inode *dp, char *name, uint *poff)
 {
@@ -548,6 +565,7 @@ dirlookup(struct inode *dp, char *name, uint *poff)
 }
 
 // Write a new directory entry (name, inum) into the directory dp.
+// 在给定的目录下，增加一个新的目录项
 int
 dirlink(struct inode *dp, char *name, uint inum)
 {
@@ -592,6 +610,8 @@ dirlink(struct inode *dp, char *name, uint inum)
 //   skipelem("a", name) = "", setting name = "a"
 //   skipelem("", name) = skipelem("////", name) = 0
 //
+// skipelem将下个path element拷贝到name中，返回跟在下个path element的后续路径
+// 如果skipelem返回'\0'，表示提取出的path element已经是最后一个
 static char*
 skipelem(char *path, char *name)
 {
@@ -655,7 +675,7 @@ namex(char *path, int nameiparent, char *name)
   }
   return ip;
 }
-
+// namei返回路径名中最后一个元素的inode
 struct inode*
 namei(char *path)
 {
@@ -663,6 +683,7 @@ namei(char *path)
   return namex(path, 0, name);
 }
 
+// nameiparent返回最后一个元素的父目录的inode
 struct inode*
 nameiparent(char *path, char *name)
 {
